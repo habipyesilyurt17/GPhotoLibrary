@@ -229,7 +229,8 @@ final class GalleryRootView: UIView {
     
     private func updateSelectedPhotosView(count: Int) {
         selectedPhotosContainer.isHidden = count == 0
-        let remainingCount = 20 - count
+        let remainingCount = Constants.maximumPhotoCount - count
+        selectedCountLabel.isHidden = count >= Constants.maximumPhotoCount
         selectedCountLabel.text = "You can add \(remainingCount) more photos"
         thumbnailCollectionView.reloadData()
     }
@@ -303,6 +304,12 @@ extension GalleryRootView: UICollectionViewDelegate {
         }
         
         let asset = viewModel.assets[indexPath.item]
+        
+        if viewModel.selectedCount >= Constants.maximumPhotoCount && !viewModel.isSelected(asset) {
+            BannerManager.shared.showBanner(type: .warning, title: "You can choose up to \(Constants.maximumPhotoCount) photos!")
+            return
+        }
+        
         viewModel.toggleSelection(for: asset)
         collectionView.reloadData()
     }

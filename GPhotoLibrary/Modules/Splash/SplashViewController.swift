@@ -97,7 +97,7 @@ final class SplashViewController: UIViewController {
     private func presentPhotoPicker() {
         var configuration = PHPickerConfiguration()
         configuration.filter = .images
-        configuration.selectionLimit = 20
+        configuration.selectionLimit = Constants.maximumPhotoCount
         let picker = PHPickerViewController(configuration: configuration)
         picker.delegate = self
         present(picker, animated: true)
