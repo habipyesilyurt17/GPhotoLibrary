@@ -7,12 +7,13 @@
 
 import UIKit
 import PhotosUI
+import Combine
 
 final class GalleryViewController: UIViewController {
     // MARK: - Properties
     private let viewModel: GalleryViewModel
+    private var cancellables = Set<AnyCancellable>()
     private var rootView: GalleryRootView
-    private var selectedAssets: [PHAsset] = []
     
     // MARK: - Initialization
     init(viewModel: GalleryViewModel) {
@@ -32,26 +33,15 @@ final class GalleryViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        presentPhotoPicker()
+        setupBindings()
     }
-
     
-    private func presentPhotoPicker() {
-        var config = PHPickerConfiguration(photoLibrary: .shared())
-        config.selectionLimit = 20
-        config.filter = .images
-
-        let picker = PHPickerViewController(configuration: config)
-        picker.delegate = self
-        picker.modalPresentationStyle = .fullScreen
-        present(picker, animated: true)
-    }
-}
-
-// MARK: - PHPhotoLibraryChangeObserver
-extension GalleryViewController: PHPickerViewControllerDelegate {
-    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-        dismiss(animated: true)
-        viewModel.handlePickedResults(results)
+    private func setupBindings() {
+        viewModel.$assets
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.rootView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 }

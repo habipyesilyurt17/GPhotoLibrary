@@ -22,6 +22,7 @@ final class GalleryCoordinator: Coordinator {
     func start() {
         let viewModel = GalleryViewModel(coordinator: self)
         let galleryVC = GalleryViewController(viewModel: viewModel)
-        navigationController.pushViewController(galleryVC, animated: true)
+        navigationController.setViewControllers([galleryVC], animated: true)
+        navigationController.isNavigationBarHidden = true
     }
 } 
