@@ -9,7 +9,7 @@ import UIKit
 import Photos
 import Combine
 
-final class GalleryRootView: UIView {    
+final class GalleryRootView: UIView {
     // MARK: - Properties
     private let viewModel: GalleryViewModel
     private let imageManager = PHCachingImageManager()
@@ -71,6 +71,52 @@ final class GalleryRootView: UIView {
         return stack
     }()
     
+    private lazy var thumbnailHorizontalStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .fill
+        return stack
+    }()
+    
+    private lazy var arrowImageViewVerticalStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.alignment = .fill
+        return stack
+    }()
+    
+    private lazy var spacerView1: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    private lazy var spacerView2: UIView = {
+        let view = UIView()
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    private let arrowImageViewContainer: UIView = {
+        let view = UIView()
+        view.backgroundColor = .lightGray
+        view.layer.cornerRadius = 25
+        view.clipsToBounds = true
+        view.isUserInteractionEnabled = true
+        return view
+    }()
+    
+    private lazy var arrowImageView: UIImageView = {
+        let imageView = UIImageView()
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .medium)
+        imageView.image = UIImage(systemName: "arrow.right", withConfiguration: config)
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .white
+        return imageView
+    }()
+    
     private lazy var selectedCountLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
@@ -120,7 +166,14 @@ final class GalleryRootView: UIView {
         
         selectedPhotosContainer.addSubview(selectedPhotosStack)
         selectedPhotosStack.addArrangedSubview(selectedCountLabel)
-        selectedPhotosStack.addArrangedSubview(thumbnailCollectionView)
+        selectedPhotosStack.addArrangedSubview(thumbnailHorizontalStack)
+        
+        thumbnailHorizontalStack.addArrangedSubview(thumbnailCollectionView)
+        thumbnailHorizontalStack.addArrangedSubview(arrowImageViewVerticalStack)
+        arrowImageViewVerticalStack.addArrangedSubview(spacerView1)
+        arrowImageViewVerticalStack.addArrangedSubview(arrowImageViewContainer)
+        arrowImageViewVerticalStack.addArrangedSubview(spacerView2)
+        arrowImageViewContainer.addSubview(arrowImageView)
     }
     
     private func setupConstraints() {
@@ -129,7 +182,8 @@ final class GalleryRootView: UIView {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         selectedPhotosContainer.translatesAutoresizingMaskIntoConstraints = false
         selectedPhotosStack.translatesAutoresizingMaskIntoConstraints = false
-        thumbnailCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        thumbnailHorizontalStack.translatesAutoresizingMaskIntoConstraints = false
+        arrowImageView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             mainVerticalStack.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
@@ -146,7 +200,13 @@ final class GalleryRootView: UIView {
             selectedPhotosStack.trailingAnchor.constraint(equalTo: selectedPhotosContainer.trailingAnchor),
             selectedPhotosStack.bottomAnchor.constraint(equalTo: selectedPhotosContainer.bottomAnchor),
             
-            thumbnailCollectionView.heightAnchor.constraint(equalToConstant: 70)
+            arrowImageViewContainer.widthAnchor.constraint(equalToConstant: 50),
+            arrowImageViewContainer.heightAnchor.constraint(equalToConstant: 50),
+            
+            arrowImageView.centerXAnchor.constraint(equalTo: arrowImageViewContainer.centerXAnchor),
+            arrowImageView.centerYAnchor.constraint(equalTo: arrowImageViewContainer.centerYAnchor),
+            arrowImageView.widthAnchor.constraint(equalToConstant: 25),
+            arrowImageView.heightAnchor.constraint(equalToConstant: 25)
         ])
     }
     
@@ -157,11 +217,19 @@ final class GalleryRootView: UIView {
                 self?.updateSelectedPhotosView(count: count)
             }
             .store(in: &cancellables)
+        
+        viewModel.$isSelectionModeActive
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] isActive in
+                self?.selectedPhotosContainer.isHidden = !isActive
+                self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
     
     private func updateSelectedPhotosView(count: Int) {
         selectedPhotosContainer.isHidden = count == 0
-        let remainingCount = Constants.maximumPhotoCount - count
+        let remainingCount = 20 - count
         selectedCountLabel.text = "You can add \(remainingCount) more photos"
         thumbnailCollectionView.reloadData()
     }
@@ -197,8 +265,9 @@ extension GalleryRootView: UICollectionViewDataSource {
             }
             
             cell.onCloseButtonTapped = { [weak self] in
-                self?.viewModel.toggleSelection(for: asset)
-                self?.collectionView.reloadData()
+                guard let self = self else { return }
+                self.viewModel.toggleSelection(for: asset)
+                self.collectionView.reloadData()
             }
             
             return cell
@@ -217,7 +286,9 @@ extension GalleryRootView: UICollectionViewDataSource {
                 }
             }
             
-            cell.setSelected(viewModel.isSelected(asset))
+            let isSelected = viewModel.isSelected(asset)
+            let selectionOrder = viewModel.selectionOrder(for: asset)
+            cell.setSelected(isSelected || viewModel.isSelectionModeActive, selectionOrder: selectionOrder)
             
             return cell
         }
@@ -233,9 +304,6 @@ extension GalleryRootView: UICollectionViewDelegate {
         
         let asset = viewModel.assets[indexPath.item]
         viewModel.toggleSelection(for: asset)
-        
-        if let cell = collectionView.cellForItem(at: indexPath) as? PhotoCell {
-            cell.setSelected(viewModel.isSelected(asset))
-        }
+        collectionView.reloadData()
     }
 }

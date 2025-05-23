@@ -24,21 +24,21 @@ final class PhotoCell: UICollectionViewCell {
         return view
     }()
     
-    private let checkmarkContainer: UIView = {
+    private let selectionContainer: UIView = {
         let view = UIView()
-        view.backgroundColor = .lightGray
+        view.backgroundColor = .white
         view.layer.cornerRadius = 12
         view.clipsToBounds = true
         view.isHidden = true
         return view
     }()
     
-    private let checkmarkImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .white
-        imageView.image = UIImage(named: "check-icon")
-        return imageView
+    private let selectedCountLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .black
+        label.font = .systemFont(ofSize: 12, weight: .bold)
+        label.textAlignment = .center
+        return label
     }()
     
     override init(frame: CGRect) {
@@ -54,15 +54,15 @@ final class PhotoCell: UICollectionViewCell {
     private func setupViews() {
         contentView.addSubview(imageView)
         contentView.addSubview(blurView)
-        contentView.addSubview(checkmarkContainer)
-        checkmarkContainer.addSubview(checkmarkImageView)
+        contentView.addSubview(selectionContainer)
+        selectionContainer.addSubview(selectedCountLabel)
     }
     
     private func setupConstraints() {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         blurView.translatesAutoresizingMaskIntoConstraints = false
-        checkmarkContainer.translatesAutoresizingMaskIntoConstraints = false
-        checkmarkImageView.translatesAutoresizingMaskIntoConstraints = false
+        selectionContainer.translatesAutoresizingMaskIntoConstraints = false
+        selectedCountLabel.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             imageView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -75,15 +75,13 @@ final class PhotoCell: UICollectionViewCell {
             blurView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             blurView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            checkmarkContainer.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            checkmarkContainer.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            checkmarkContainer.widthAnchor.constraint(equalToConstant: 24),
-            checkmarkContainer.heightAnchor.constraint(equalToConstant: 24),
+            selectionContainer.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 4),
+            selectionContainer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -4),
+            selectionContainer.widthAnchor.constraint(equalToConstant: 24),
+            selectionContainer.heightAnchor.constraint(equalToConstant: 24),
             
-            checkmarkImageView.centerXAnchor.constraint(equalTo: checkmarkContainer.centerXAnchor),
-            checkmarkImageView.centerYAnchor.constraint(equalTo: checkmarkContainer.centerYAnchor),
-            checkmarkImageView.widthAnchor.constraint(equalToConstant: 16),
-            checkmarkImageView.heightAnchor.constraint(equalToConstant: 16)
+            selectedCountLabel.centerXAnchor.constraint(equalTo: selectionContainer.centerXAnchor),
+            selectedCountLabel.centerYAnchor.constraint(equalTo: selectionContainer.centerYAnchor)
         ])
     }
     
@@ -91,14 +89,19 @@ final class PhotoCell: UICollectionViewCell {
         imageView.image = image
     }
     
-    func setSelected(_ isSelected: Bool) {
+    func setSelected(_ isSelected: Bool, selectionOrder: Int? = nil) {
         blurView.isHidden = !isSelected
-        checkmarkContainer.isHidden = !isSelected
+        selectionContainer.isHidden = !isSelected
+        
+        if let order = selectionOrder {
+            selectedCountLabel.text = "\(order)"
+        }
     }
     
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
         setSelected(false)
+        selectedCountLabel.text = nil
     }
 }

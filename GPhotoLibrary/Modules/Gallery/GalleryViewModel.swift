@@ -18,6 +18,7 @@ final class GalleryViewModel {
     @Published var assets: [PHAsset] = []
     @Published var selectedAssets: [PHAsset] = []
     @Published var selectedCount: Int = 0
+    @Published var isSelectionModeActive: Bool = false
     
     var onAssetsUpdated: (([PHAsset]) -> Void)?
     var onSelectionChanged: (([PHAsset]) -> Void)?
@@ -58,13 +59,26 @@ final class GalleryViewModel {
     func toggleSelection(for asset: PHAsset) {
         if let index = selectedAssets.firstIndex(of: asset) {
             selectedAssets.remove(at: index)
-        } else if selectedAssets.count < Constants.maximumPhotoCount {
+            selectedCount = selectedAssets.count
+            
+            if selectedCount == 0 {
+                isSelectionModeActive = false
+            }
+        } else if selectedAssets.count < 20 {
+            if !isSelectionModeActive {
+                isSelectionModeActive = true
+            }
+            
             selectedAssets.append(asset)
+            selectedCount = selectedAssets.count
         }
-        selectedCount = selectedAssets.count
     }
     
     func isSelected(_ asset: PHAsset) -> Bool {
         return selectedAssets.contains(asset)
+    }
+    
+    func selectionOrder(for asset: PHAsset) -> Int? {
+        return selectedAssets.firstIndex(of: asset).map { $0 + 1 }
     }
 }
