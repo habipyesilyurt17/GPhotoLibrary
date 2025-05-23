@@ -13,7 +13,6 @@ final class SplashCoordinator: Coordinator {
     private let navigationController: UINavigationController
     private var disposeBag = Set<AnyCancellable>()
     private let appRoot: CurrentValueSubject<Roots, Never>
-    var onFinish: (() -> Void)?
 
     init(navigationController: UINavigationController,
          appRoot: CurrentValueSubject<Roots, Never>) {
@@ -26,16 +25,13 @@ final class SplashCoordinator: Coordinator {
         let splashVC = SplashViewController(viewModel: viewModel)
 
         splashVC.onPermissionGranted = { [weak self] in
-            self?.showGallery()
+            self?.navigateToGallery()
         }
 
         navigationController.setViewControllers([splashVC], animated: false)
     }
     
-    private func showGallery() {
-        let galleryCoordinator = GalleryCoordinator(
-            navigationController: navigationController,
-            appRoot: .init(.gallery))
-        galleryCoordinator.start()
+    private func navigateToGallery() {
+        self.appRoot.send(.gallery)
     }
 }

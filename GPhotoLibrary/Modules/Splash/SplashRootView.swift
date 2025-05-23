@@ -8,15 +8,27 @@
 import UIKit
 
 final class SplashRootView: UIView {
+    // MARK: - UI Components
+    private lazy var permissionButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("Open Settings", for: .normal)
+        button.isHidden = true
+        button.backgroundColor = .black
+        button.setTitleColor(.white, for: .normal)
+        button.addTarget(self, action: #selector(openSettings), for: .touchUpInside)
+        return button
+    }()
+    
+    private lazy var permissionLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Please grant photo access permission"
+        label.textAlignment = .center
+        label.isHidden = true
+        return label
+    }()
+    
     // MARK: - Properties
     private let viewModel: SplashViewModel
-    
-    // MARK: - UI Elements
-    private lazy var containerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .white
-        return view
-    }()
     
     // MARK: - Initialization
     init(viewModel: SplashViewModel) {
@@ -24,7 +36,7 @@ final class SplashRootView: UIView {
         super.init(frame: .zero)
         setupViews()
         setupConstraints()
-        self.backgroundColor = .white
+        setupBindings()
     }
     
     required init?(coder: NSCoder) {
@@ -33,17 +45,52 @@ final class SplashRootView: UIView {
     
     // MARK: - Setup
     private func setupViews() {
-        addSubview(containerView)
+        backgroundColor = .white
+        addSubview(permissionLabel)
+        addSubview(permissionButton)
     }
     
     private func setupConstraints() {
-        containerView.translatesAutoresizingMaskIntoConstraints = false
+        permissionLabel.translatesAutoresizingMaskIntoConstraints = false
+        permissionButton.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: topAnchor),
-            containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: bottomAnchor)
+            permissionLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            permissionLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
+            
+            permissionButton.topAnchor.constraint(equalTo: permissionLabel.bottomAnchor, constant: 20),
+            permissionButton.centerXAnchor.constraint(equalTo: centerXAnchor),
+            permissionButton.widthAnchor.constraint(equalToConstant: 200),
+            permissionButton.heightAnchor.constraint(equalToConstant: 50),
         ])
+    }
+    
+    private func setupBindings() {
+        viewModel.permissionStateDidChange = { [weak self] state in
+            DispatchQueue.main.async {
+                self?.updateUI(for: state)
+            }
+        }
+    }
+    
+    private func updateUI(for state: PermissionState) {
+        switch state {
+        case .notDetermined:
+            permissionLabel.isHidden = true
+            permissionButton.isHidden = true
+        case .granted:
+            permissionLabel.isHidden = true
+            permissionButton.isHidden = true
+        case .denied:
+            permissionLabel.isHidden = false
+            permissionButton.isHidden = false
+        }
+    }
+    
+    @objc private func openSettings() {
+        if let appSettings = URL(string: UIApplication.openSettingsURLString),
+           UIApplication.shared.canOpenURL(appSettings) {
+            UIApplication.shared.open(appSettings)
+        }
     }
 }

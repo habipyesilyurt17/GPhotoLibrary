@@ -8,6 +8,12 @@
 import UIKit
 import PhotosUI
 
+enum PermissionState {
+    case notDetermined
+    case granted
+    case denied
+}
+
 final class SplashViewController: UIViewController {
     // MARK: - Properties
     private let viewModel: SplashViewModel
@@ -45,12 +51,6 @@ final class SplashViewController: UIViewController {
         viewModel.onPermissionGranted = { [weak self] in
             self?.onPermissionGranted?()
         }
-        
-        viewModel.onPermissionDenied = { [weak self] in
-            DispatchQueue.main.async {
-                self?.showPermissionAlert()
-            }
-        }
     }
     
     private func setupNotifications() {
@@ -66,41 +66,6 @@ final class SplashViewController: UIViewController {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-    }
-    
-    private func showPermissionAlert() {
-        if presentedViewController != nil { return }
-        
-        let alert = UIAlertController(
-            title: "Permission Required",
-            message: "You must grant access to the photo gallery.",
-            preferredStyle: .alert
-        )
-        
-        let settingsAction = UIAlertAction(title: "Go to Settings", style: .default) { _ in
-            if let appSettings = URL(string: UIApplication.openSettingsURLString),
-               UIApplication.shared.canOpenURL(appSettings) {
-                UIApplication.shared.open(appSettings)
-            }
-        }
-        
-        let exitAction = UIAlertAction(title: "Exit Application", style: .destructive) { _ in
-            exit(0)
-        }
-        
-        alert.addAction(settingsAction)
-        alert.addAction(exitAction)
-        
-        present(alert, animated: true)
-    }
-    
-    private func presentPhotoPicker() {
-        var configuration = PHPickerConfiguration()
-        configuration.filter = .images
-        configuration.selectionLimit = Constants.maximumPhotoCount
-        let picker = PHPickerViewController(configuration: configuration)
-        picker.delegate = self
-        present(picker, animated: true)
     }
 }
 
