@@ -63,13 +63,11 @@ final class BannerManager {
 
         keyWindow.layoutIfNeeded()
 
-        // Animate in
         topConstraint.constant = 16
         UIView.animate(withDuration: 0.3) {
             keyWindow.layoutIfNeeded()
         }
 
-        // Animate out
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             topConstraint.constant = -bannerHeight
             UIView.animate(withDuration: 0.3, animations: {

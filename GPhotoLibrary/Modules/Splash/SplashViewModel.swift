@@ -9,6 +9,12 @@ import UIKit
 import Combine
 import Photos
 
+enum PermissionState {
+    case notDetermined
+    case granted
+    case denied
+}
+
 final class SplashViewModel {
     // MARK: - Properties
     private let coordinator: SplashCoordinator

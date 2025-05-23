@@ -64,7 +64,7 @@ final class GalleryViewModel {
             if selectedCount == 0 {
                 isSelectionModeActive = false
             }
-        } else if selectedAssets.count < 20 {
+        } else if selectedAssets.count < Constants.maximumPhotoCount {
             if !isSelectionModeActive {
                 isSelectionModeActive = true
             }

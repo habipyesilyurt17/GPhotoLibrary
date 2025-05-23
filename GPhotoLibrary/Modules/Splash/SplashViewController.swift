@@ -8,12 +8,6 @@
 import UIKit
 import PhotosUI
 
-enum PermissionState {
-    case notDetermined
-    case granted
-    case denied
-}
-
 final class SplashViewController: UIViewController {
     // MARK: - Properties
     private let viewModel: SplashViewModel
